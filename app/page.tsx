@@ -1,6 +1,6 @@
 'use client';
-import DecisionDNA from "../components/DecisionDNA";
 import TrustGraphResults from "../components/TrustgraphResults";
+import FinTwinDashboard from "../components/FinTwinDashboard";
 import { useMemo, useState } from 'react';
 import {
     ShieldCheck,
@@ -269,6 +269,27 @@ export default function Home() {
 
                     {/* Results */}
                     <div className="lg:col-span-3 space-y-5">
+                        <FinTwinDashboard
+                            data={{
+                                monthlyPayment: 177.7,
+                                monthlyCashFlow: 822.3,
+                                projectedSavings: [
+                                    { month: 0, savings: 3000 },
+                                    { month: 1, savings: 3822.3 },
+                                    { month: 2, savings: 4644.6 },
+                                    { month: 3, savings: 5466.91 },
+                                    { month: 4, savings: 6289.21 },
+                                    { month: 5, savings: 7111.51 },
+                                    { month: 6, savings: 7933.81 },
+                                    { month: 7, savings: 8756.12 },
+                                    { month: 8, savings: 9578.42 },
+                                    { month: 9, savings: 10400.72 },
+                                    { month: 10, savings: 11223.02 },
+                                    { month: 11, savings: 12045.33 },
+                                    { month: 12, savings: 12867.63 },
+                                ],
+                            }}
+                        />
                         <div className="grid sm:grid-cols-2 gap-3">
                             {[
                                 ['Monthly payment', money(results.payment)],
