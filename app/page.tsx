@@ -1,4 +1,5 @@
 'use client';
+import DecisionDNA from "../components/DecisionDNA";
 import { useMemo, useState } from 'react';
 import {
     ShieldCheck,
@@ -148,6 +149,7 @@ export default function Home() {
 
     return (
         <main className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+            <DecisionDNA />
             {/* Header */}
             <header className="flex flex-wrap justify-between gap-4 items-center">
                 <div>
