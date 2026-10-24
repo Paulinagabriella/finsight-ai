@@ -1,5 +1,6 @@
 'use client';
 import DecisionDNA from "../components/DecisionDNA";
+import TrustGraphResults from "../components/TrustgraphResults";
 import { useMemo, useState } from 'react';
 import {
     ShieldCheck,
@@ -149,7 +150,6 @@ export default function Home() {
 
     return (
         <main className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-            <DecisionDNA />
             {/* Header */}
             <header className="flex flex-wrap justify-between gap-4 items-center">
                 <div>
@@ -220,6 +220,15 @@ export default function Home() {
                                 <p className="hint mt-1">{f.detail}</p>
                             </div>
                         ))}
+                        <TrustGraphResults
+                            data={{
+                                interestRates: [0, 29.99],
+                                promotionalOffer: true,
+                                detectedFees: ["late fee"],
+                                warnings: ["Review the promotional expiration date."],
+                                verified: false,
+                            }}
+                        />
                         <p className="hint">
                             Missing information is not evidence of fraud. Always consult the official agreement.
                         </p>
