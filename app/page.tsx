@@ -2,6 +2,7 @@
 import TrustGraphResults from "../components/TrustgraphResults";
 import FinTwinDashboard from "../components/FinTwinDashboard";
 import BreakingPoint from "../components/BreakingPoint";
+import DecisionPassport from "../components/DecisionPassport";
 import { useMemo, useState } from 'react';
 import {
     ShieldCheck,
@@ -399,56 +400,21 @@ export default function Home() {
             )}
 
             {/* 4 · Decision Passport */}
-            {active === 'passport' && (
-                <section className="panel space-y-5">
-                    <div className="flex justify-between items-start gap-3 flex-wrap">
-                        <div>
-                            <div className="eyebrow">Unified decision report</div>
-                            <h2 className="text-3xl font-bold">Your Decision Passport</h2>
-                        </div>
-                        <button className="action flex gap-2 items-center" onClick={exportReport}>
-                            <Download size={16} /> Export report
-                        </button>
-                    </div>
-
-                    <div className="grid md:grid-cols-3 gap-4">
-                        <div className="stat">
-                            <ShieldCheck className="text-cyan mb-2" />
-                            <b>TrustGraph</b>
-                            <p className="hint mt-2">
-                                {warningCount} warnings and {findings.length} total findings. Terms are unverified.
-                            </p>
-                        </div>
-                        <div className="stat">
-                            <Activity className="text-cyan mb-2" />
-                            <b>FinTwin</b>
-                            <p className="hint mt-2">
-                                {money(results.payment)}/month; stressed ending savings {money(results.stressEnding)}.
-                            </p>
-                        </div>
-                        <div className="stat">
-                            <BrainCircuit className="text-cyan mb-2" />
-                            <b>DecisionDNA</b>
-                            <p className="hint mt-2">Primary priority: {PRIORITY_LABELS[priority]}.</p>
-                        </div>
-                    </div>
-
-                    <div className="bg-night rounded-xl p-5 space-y-2">
-                        <h3 className="font-bold text-xl">Before you decide</h3>
-                        <p>1. Confirm the complete official repayment terms and any fees.</p>
-                        <p>2. Check whether your budget remains workable after an income reduction or emergency.</p>
-                        <p>3. Compare this offer with paying upfront, waiting, or a lower-cost alternative.</p>
-                        <p>4. Decide whether the tradeoffs align with your stated priorities.</p>
-                    </div>
-
-                    <p className="hint">
-                        Educational decision-support prototype. No financial advice, live market verification,
-                        or personalized investment recommendation. Inputs stay in this browser session.
-                    </p>
-                    <button className="action" onClick={() => setActive('simulate')}>
-                        ← Run another stress test
-                    </button>
-                </section>
+            {active === "passport" && (
+                <DecisionPassport
+                    inputs={inputs}
+                    results={results}
+                    findings={findings}
+                    priority={priority}
+                    reason={reason}
+                    riskLevel={
+                        results.stressed < 0
+                            ? "high"
+                            : results.normal < 300
+                                ? "moderate"
+                                : "low"
+                    }
+                />
             )}
 
             {/* Footer */}
