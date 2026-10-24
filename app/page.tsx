@@ -1,5 +1,4 @@
 'use client';
-
 import { useMemo, useState } from 'react';
 import {
     ShieldCheck,
@@ -249,8 +248,11 @@ export default function Home() {
                             </label>
                         ))}
 
-                        <button className="action" onClick={() => setActive('reflect')}>
-                            Continue to DecisionDNA →
+                        <button
+                            className="action"
+                            onClick={() => setActive('reflect')}
+                        >
+                            Analyze My Decision →
                         </button>
                     </div>
 
