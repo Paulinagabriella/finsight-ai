@@ -2,74 +2,118 @@
 @tailwind components;
 @tailwind utilities;
 
+/* FinSight AI color palette */
 :root {
-    color-scheme: dark
+    color-scheme: dark;
+
+    --background: #0B1120;
+    --card: #172033;
+    --accent: #60E8D3;
+    --text-primary: #EEF5FF;
+    --text-secondary: #A5B4C9;
+    --warning: #FBBF24;
+    --danger: #F87171;
+    --border: #283A56;
+}
+
+/* Base page */
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
 }
 
 body {
-    background: #0b1020;
-    color: #eef5ff;
-    font-family: Arial, Helvetica, sans-serif
+    margin: 0;
+    background: var(--background);
+    color: var(--text-primary);
+    font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Input fields */
 input,
 textarea,
 select {
-    background: #0d172b;
-    border: 1px solid #34455e;
+    background: #0D172B;
+    border: 1px solid #34455E;
     border-radius: 10px;
     padding: 10px;
     width: 100%;
-    color: white
+    color: white;
 }
 
-input[type=range] {
+input[type="range"] {
     padding: 0;
-    accent-color: #60e8d3;
-    border: 0
+    accent-color: var(--accent);
+    border: 0;
 }
 
+/* Buttons */
 button {
-    cursor: pointer
-}
-
-.panel {
-    background: #141e34;
-    border: 1px solid #283a56;
-    border-radius: 18px;
-    padding: 22px
-}
-
-.eyebrow {
-    color: #60e8d3;
-    font-size: 12px;
-    letter-spacing: .12em;
-    font-weight: 700;
-    text-transform: uppercase
-}
-
-.hint {
-    color: #a5b4c9;
-    font-size: 13px
+    cursor: pointer;
 }
 
 .action {
-    background: #60e8d3;
+    background: var(--accent);
     color: #071322;
+    border: none;
     border-radius: 10px;
     padding: 11px 17px;
-    font-weight: 700
+    font-weight: 700;
+    transition: filter 0.2s ease;
 }
 
+.action:hover {
+    filter: brightness(1.1);
+}
+
+/* Cards and panels */
+.panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 22px;
+}
+
+/* Small section headings */
+.eyebrow {
+    color: var(--accent);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+/* Secondary descriptions */
+.hint {
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+/* Small labels */
 .pill {
-    background: #24344c;
+    background: #24344C;
     border-radius: 30px;
     padding: 5px 10px;
-    font-size: 12px
+    font-size: 12px;
 }
 
+/* Statistics cards */
 .stat {
-    background: #0d172b;
+    background: #0D172B;
     padding: 15px;
-    border-radius: 12px
+    border-radius: 12px;
+    border: 1px solid var(--border);
+}
+
+/* Warning and critical alert colors */
+.warning {
+    color: var(--warning);
+}
+
+.danger {
+    color: var(--danger);
 }
