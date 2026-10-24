@@ -1,6 +1,7 @@
 'use client';
 import TrustGraphResults from "../components/TrustgraphResults";
 import FinTwinDashboard from "../components/FinTwinDashboard";
+import BreakingPoint from "../components/BreakingPoint";
 import { useMemo, useState } from 'react';
 import {
     ShieldCheck,
@@ -329,33 +330,28 @@ export default function Home() {
                             </p>
                         </div>
 
-                        <div className="panel space-y-3">
-                            <div className="eyebrow">The Financial Breaking Point</div>
-                            <p className="text-3xl font-bold">
-                                {money(results.breakEvenIncome)}{' '}
-                                <span className="text-base text-muted">monthly income</span>
-                            </p>
-                            <p className="hint">
-                                Below this income, monthly cash flow after expenses and the payment turns negative.
-                                With current inputs, that's a {results.maxDrop.toFixed(1)}% income decrease.
-                            </p>
-                            <label className="block">
-                                Income reduction: <b>{inputs.incomeDrop}%</b>
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max="100"
-                                    value={inputs.incomeDrop}
-                                    onChange={(e) => update('incomeDrop', Number(e.target.value))}
-                                />
-                            </label>
-                            <p className={results.stressed < 0 ? 'text-amber-300 font-bold' : 'text-cyan font-bold'}>
-                                {results.stressed < 0
-                                    ? '⚠ Negative stressed monthly cash flow'
-                                    : '✓ Nonnegative stressed monthly cash flow'}
-                                : {money(results.stressed)}
-                            </p>
-                        </div>
+
+                        <BreakingPoint
+                            data={{
+                                breakEvenIncome: results.breakEvenIncome,
+                                maxIncomeReduction: results.maxDrop,
+                                maxAdditionalExpense: Math.max(0, results.normal),
+                                monthlyCashFlow: results.normal,
+                                stressedCashFlow: results.stressed,
+                                incomeDrop: inputs.incomeDrop,
+                                alreadyUnsustainable: results.normal < 0,
+                                monthsUntilSavingsDepleted: null,
+                                riskLevel:
+                                    results.stressed < 0
+                                        ? "high"
+                                        : results.normal < 300
+                                            ? "moderate"
+                                            : "low",
+                            }}
+                            onIncomeDropChange={(value) =>
+                                update("incomeDrop", value)
+                            }
+                        />
                     </div>
                 </section>
             )}
