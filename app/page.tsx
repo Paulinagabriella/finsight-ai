@@ -331,7 +331,7 @@ async function analyzeDecision() {
                         Investigate the facts. Simulate the future. Challenge your thinking.
                     </p>
                 </div>
-                <span className="pill">Hackathon prototype · Sample data</span>
+                
             </header>
 
             {/* Feature cards */}
@@ -375,21 +375,27 @@ async function analyzeDecision() {
                         </p>
                         <textarea rows={10} value={offer} onChange={(e) => setOffer(e.target.value)} />
                           
-<button
-    type="button"
-    className="action"
-    onClick={() => {
-        setAnalyzedOffer(offer);
-        setAnalysis(null);
-    }}
->
-    Analyze Offer
-</button>
-  
-                        <button className="action" onClick={() => setActive('simulate')}>
-                            Continue to simulation →
-                        </button>
-                    </div>
+<div className="flex flex-col gap-4">
+    <button
+        type="button"
+        className="action w-full"
+        onClick={() => {
+            setAnalyzedOffer(offer);
+            setAnalysis(null);
+        }}
+    >
+        Analyze Offer
+    </button>
+
+    <button
+        type="button"
+        className="action w-full"
+        onClick={() => setActive("simulate")}
+    >
+        Continue to simulation →
+    </button>
+</div>
+</div>
 
                     <div className="panel space-y-3">
                         <h3 className="text-xl font-bold">Detected findings</h3>
@@ -661,18 +667,23 @@ onBlur={() => {
                         </label>
 
 
-<button
-    type="button"
-    className="action"
-    onClick={() => setGeneratedInsight(decisionInsight)}
->
-    Generate My Insights →
-</button>
+<div className="flex flex-col gap-4">
+    <button
+        type="button"
+        className="action w-full"
+        onClick={() => setGeneratedInsight(decisionInsight)}
+    >
+        Generate My Insights →
+    </button>
 
-
-                        <button className="action" onClick={() => setActive('passport')}>
-                            Generate decision passport →
-                        </button>
+    <button
+        type="button"
+        className="action w-full"
+        onClick={() => setActive("passport")}
+    >
+        Generate decision passport →
+    </button>
+</div>
                     </div>
 
                     
