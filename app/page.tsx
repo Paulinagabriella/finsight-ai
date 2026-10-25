@@ -28,6 +28,33 @@ import { analyzeOffer, calculate, FinancialInputs } from '../lib/finance';
 
 type Tab = 'investigate' | 'simulate' | 'reflect' | 'passport';
 
+type AnalysisResponse = {
+  success: boolean;
+  finTwin: {
+    monthlyPayment: number;
+    monthlyCashFlow: number;
+    projectedSavings: {
+      month: number;
+      savings: number;
+    }[];
+  };
+  breakingPoint: {
+    maxIncomeReduction: number;
+    maxAdditionalExpense: number;
+    alreadyUnsustainable: boolean;
+    monthsUntilSavingsDepleted: number | null;
+    riskLevel: "low" | "moderate" | "high";
+  };
+  trustGraph: {
+    interestRates: number[];
+    promotionalOffer: boolean;
+    detectedFees: string[];
+    warnings: string[];
+    verified: boolean;
+  };
+  priority: string | null;
+};
+
 /* ---------- Constants ---------- */
 
 const INITIAL_INPUTS: FinancialInputs = {
@@ -109,17 +136,26 @@ export default function Home() {
     const [priority, setPriority] = useState('emergency');
     const [reason, setReason] = useState('lowpayment');
     const [active, setActive] = useState<Tab>('investigate');
-
+    const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
     const results = useMemo(() => calculate(inputs), [inputs]);
     const findings = useMemo(() => analyzeOffer(offer), [offer]);
 
     const warningCount = findings.filter((f) => f.kind === 'warning').length;
 
-    const update = (key: keyof FinancialInputs, value: number) =>
-        setInputs((prev) => ({
-            ...prev,
-            [key]: Number.isFinite(value) ? Math.max(0, value) : 0,
-        }));
+    
+const update = (key: keyof FinancialInputs, value: number) => {
+    setInputs((prev) => ({
+        ...prev,
+        [key]: Number.isFinite(value) ? Math.max(0, value) : 0,
+    }));
+
+    if (key !== "incomeDrop" && key !== "shock") {
+        setAnalysis(null);
+    }
+};
+
 
     const exportReport = () => {
         const lines = [
@@ -149,6 +185,50 @@ export default function Home() {
         link.click();
         URL.revokeObjectURL(link.href);
     };
+    
+async function analyzeDecision() {
+  setLoading(true);
+  setError("");
+  setAnalysis(null);
+
+  try {
+    const response = await fetch("/api/analyze", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        income: inputs.income,
+        expenses: inputs.expenses,
+        savings: inputs.savings,
+        purchaseAmount: inputs.price,
+        interestRate: inputs.apr,
+        termMonths: inputs.months,
+        offerText: offer,
+        priority: priority,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.error || "Unable to analyze decision."
+      );
+    }
+
+    setAnalysis(data);
+  } catch (err) {
+    setError(
+      err instanceof Error
+        ? err.message
+        : "Something went wrong."
+    );
+  } finally {
+    setLoading(false);
+  }
+}
+
 
     return (
         <main className="max-w-6xl mx-auto px-4 py-8 space-y-6">
@@ -222,15 +302,13 @@ export default function Home() {
                                 <p className="hint mt-1">{f.detail}</p>
                             </div>
                         ))}
-                        <TrustGraphResults
-                            data={{
-                                interestRates: [0, 29.99],
-                                promotionalOffer: true,
-                                detectedFees: ["late fee"],
-                                warnings: ["Review the promotional expiration date."],
-                                verified: false,
-                            }}
-                        />
+                        
+{analysis && (
+    <TrustGraphResults
+        data={analysis.trustGraph}
+    />
+)}
+
                         <p className="hint">
                             Missing information is not evidence of fraud. Always consult the official agreement.
                         </p>
@@ -263,35 +341,28 @@ export default function Home() {
 
                         <button
                             className="action"
-                            onClick={() => setActive('reflect')}
+                            disabled={loading}
+                            onClick={analyzeDecision}
                         >
-                            Analyze My Decision →
+                            {loading ? "Analyzing..." : "Analyze My Decision →"}
                         </button>
                     </div>
 
                     {/* Results */}
                     <div className="lg:col-span-3 space-y-5">
-                        <FinTwinDashboard
-                            data={{
-                                monthlyPayment: 177.7,
-                                monthlyCashFlow: 822.3,
-                                projectedSavings: [
-                                    { month: 0, savings: 3000 },
-                                    { month: 1, savings: 3822.3 },
-                                    { month: 2, savings: 4644.6 },
-                                    { month: 3, savings: 5466.91 },
-                                    { month: 4, savings: 6289.21 },
-                                    { month: 5, savings: 7111.51 },
-                                    { month: 6, savings: 7933.81 },
-                                    { month: 7, savings: 8756.12 },
-                                    { month: 8, savings: 9578.42 },
-                                    { month: 9, savings: 10400.72 },
-                                    { month: 10, savings: 11223.02 },
-                                    { month: 11, savings: 12045.33 },
-                                    { month: 12, savings: 12867.63 },
-                                ],
-                            }}
-                        />
+                        
+{error && (
+    <p className="text-red-400">
+        {error}
+    </p>
+)}
+
+{analysis && (
+    <FinTwinDashboard
+        data={analysis.finTwin}
+    />
+)}
+
                         <div className="grid sm:grid-cols-2 gap-3">
                             {[
                                 ['Monthly payment', money(results.payment)],
@@ -332,27 +403,46 @@ export default function Home() {
                         </div>
 
 
-                        <BreakingPoint
-                            data={{
-                                breakEvenIncome: results.breakEvenIncome,
-                                maxIncomeReduction: results.maxDrop,
-                                maxAdditionalExpense: Math.max(0, results.normal),
-                                monthlyCashFlow: results.normal,
-                                stressedCashFlow: results.stressed,
-                                incomeDrop: inputs.incomeDrop,
-                                alreadyUnsustainable: results.normal < 0,
-                                monthsUntilSavingsDepleted: null,
-                                riskLevel:
-                                    results.stressed < 0
-                                        ? "high"
-                                        : results.normal < 300
-                                            ? "moderate"
-                                            : "low",
-                            }}
-                            onIncomeDropChange={(value) =>
-                                update("incomeDrop", value)
-                            }
-                        />
+                        
+{analysis && (
+    <BreakingPoint
+        data={{
+            breakEvenIncome:
+                inputs.expenses + analysis.finTwin.monthlyPayment,
+
+            maxIncomeReduction:
+                inputs.income > 0
+                    ? (analysis.breakingPoint.maxIncomeReduction /
+                        inputs.income) * 100
+                    : 0,
+
+            maxAdditionalExpense:
+                analysis.breakingPoint.maxAdditionalExpense,
+
+            monthlyCashFlow:
+                analysis.finTwin.monthlyCashFlow,
+
+            stressedCashFlow:
+                analysis.finTwin.monthlyCashFlow -
+                (inputs.income * inputs.incomeDrop) / 100,
+
+            incomeDrop: inputs.incomeDrop,
+
+            alreadyUnsustainable:
+                analysis.breakingPoint.alreadyUnsustainable,
+
+            monthsUntilSavingsDepleted:
+                analysis.breakingPoint.monthsUntilSavingsDepleted,
+
+            riskLevel:
+                analysis.breakingPoint.riskLevel,
+        }}
+        onIncomeDropChange={(value) =>
+            update("incomeDrop", value)
+        }
+    />
+)}
+
                     </div>
                 </section>
             )}
@@ -399,23 +489,20 @@ export default function Home() {
                 </section>
             )}
 
-            {/* 4 · Decision Passport */}
-            {active === "passport" && (
-                <DecisionPassport
-                    inputs={inputs}
-                    results={results}
-                    findings={findings}
-                    priority={priority}
-                    reason={reason}
-                    riskLevel={
-                        results.stressed < 0
-                            ? "high"
-                            : results.normal < 300
-                                ? "moderate"
-                                : "low"
-                    }
-                />
-            )}
+            
+{/* 4 · Decision Passport */}
+{active === "passport" && analysis && (
+    <DecisionPassport
+        inputs={inputs}
+        results={results}
+        findings={findings}
+        priority={priority}
+        reason={reason}
+        riskLevel={analysis.breakingPoint.riskLevel}
+        analysis={analysis}
+    />
+)}
+
 
             {/* Footer */}
             <footer className="text-center text-muted text-xs py-6">

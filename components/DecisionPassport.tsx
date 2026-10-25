@@ -34,6 +34,32 @@ type PassportProps = {
     priority: string;
     reason: string;
     riskLevel: string;
+    
+    analysis: {
+        finTwin: {
+            monthlyPayment: number;
+            monthlyCashFlow: number;
+            projectedSavings: {
+                month: number;
+                savings: number;
+            }[];
+        };
+        breakingPoint: {
+            maxIncomeReduction: number;
+            maxAdditionalExpense: number;
+            alreadyUnsustainable: boolean;
+            monthsUntilSavingsDepleted: number | null;
+            riskLevel: "low" | "moderate" | "high";
+        };
+        trustGraph: {
+            interestRates: number[];
+            promotionalOffer: boolean;
+            detectedFees: string[];
+            warnings: string[];
+            verified: boolean;
+        };
+    };
+
 };
 
 const money = (value: number) =>
@@ -62,10 +88,38 @@ export default function DecisionPassport({
     priority,
     reason,
     riskLevel,
+    analysis,
 }: PassportProps) {
-    const warningCount = findings.filter(
-        (finding) => finding.kind === "warning"
-    ).length;
+    
+const passportFindings: Finding[] = [
+    ...analysis.trustGraph.warnings.map((warning) => ({
+        kind: "warning",
+        title: "Offer warning",
+        detail: warning,
+    })),
+    ...analysis.trustGraph.detectedFees.map((fee) => ({
+        kind: "info",
+        title: "Detected fee",
+        detail: fee,
+    })),
+];
+
+const warningCount = analysis.trustGraph.warnings.length;
+
+        
+    
+    const apiPayment = analysis.finTwin.monthlyPayment;
+    const apiCashFlow = analysis.finTwin.monthlyCashFlow;
+
+    const apiBreakEvenIncome =
+        inputs.expenses + apiPayment;
+
+    const apiRiskLevel =
+        analysis.breakingPoint.riskLevel;
+
+    const apiWarnings =
+        analysis.trustGraph.warnings;
+
 
     const exportReport = () => {
         const report = {
@@ -74,26 +128,41 @@ export default function DecisionPassport({
             disclaimer:
                 "Educational simulation only. Not financial advice. Offer terms are not independently verified.",
             financialInputs: inputs,
-            financialResults: {
-                monthlyPayment: results.payment,
-                totalPayments: results.total,
-                normalMonthlyCashFlow: results.normal,
-                stressedMonthlyCashFlow: results.stressed,
-                stressedEndingSavings: results.stressEnding,
-                breakEvenIncome: results.breakEvenIncome,
-                maximumIncomeDrop: results.maxDrop,
-            },
-            trustGraph: {
-                warningCount,
-                totalFindings: findings.length,
-                verified: false,
-                findings,
-            },
-            breakingPoint: {
-                riskLevel,
-                incomeReductionPercent: inputs.incomeDrop,
-                emergencyExpense: inputs.shock,
-            },
+            
+financialResults: {
+    monthlyPayment: apiPayment,
+    totalPayments: apiPayment * inputs.months,
+    normalMonthlyCashFlow: apiCashFlow,
+    stressedMonthlyCashFlow: results.stressed,
+    stressedEndingSavings: results.stressEnding,
+    breakEvenIncome: apiBreakEvenIncome,
+    maximumIncomeDrop:
+        analysis.breakingPoint.maxIncomeReduction,
+},
+
+            
+trustGraph: {
+    warningCount: apiWarnings.length,
+    verified: analysis.trustGraph.verified,
+    interestRates: analysis.trustGraph.interestRates,
+    promotionalOffer: analysis.trustGraph.promotionalOffer,
+    detectedFees: analysis.trustGraph.detectedFees,
+    warnings: apiWarnings,
+},
+
+            
+breakingPoint: {
+    riskLevel: apiRiskLevel,
+    maximumAdditionalExpense:
+        analysis.breakingPoint.maxAdditionalExpense,
+    alreadyUnsustainable:
+        analysis.breakingPoint.alreadyUnsustainable,
+    monthsUntilSavingsDepleted:
+        analysis.breakingPoint.monthsUntilSavingsDepleted,
+    incomeReductionPercent: inputs.incomeDrop,
+    emergencyExpense: inputs.shock,
+},
+
             decisionDNA: {
                 priority: PRIORITY_LABELS[priority] ?? priority,
                 reason: REASON_LABELS[reason] ?? reason,
@@ -117,24 +186,26 @@ export default function DecisionPassport({
         URL.revokeObjectURL(url);
     };
 
-    const stats = [
-        {
-            label: "Monthly payment",
-            value: money(results.payment),
-        },
-        {
-            label: "Total repayment",
-            value: money(results.total),
-        },
-        {
-            label: "Normal monthly surplus",
-            value: money(results.normal),
-        },
-        {
-            label: "Savings after stress test",
-            value: money(results.stressEnding),
-        },
-    ];
+    
+const stats = [
+    {
+        label: "Monthly payment",
+        value: money(apiPayment),
+    },
+    {
+        label: "Total repayment",
+        value: money(apiPayment * inputs.months),
+    },
+    {
+        label: "Normal monthly surplus",
+        value: money(apiCashFlow),
+    },
+    {
+        label: "Savings after stress test",
+        value: money(results.stressEnding),
+    },
+];
+
 
     return (
         <section className="space-y-6">
@@ -179,7 +250,7 @@ export default function DecisionPassport({
                     <ShieldCheck className="text-cyan" size={26} />
                     <h3 className="text-xl font-bold">TrustGraph</h3>
                     <p className="hint">
-                        {warningCount} warning(s), {findings.length} total finding(s).
+                        {warningCount} warning(s), {passportFindings.length} total finding(s).
                     </p>
                     <p className="hint">
                         Offer authenticity and lender terms have not been independently verified.
@@ -190,11 +261,11 @@ export default function DecisionPassport({
                     <Activity className="text-cyan" size={26} />
                     <h3 className="text-xl font-bold">FinTwin</h3>
                     <p>
-                        Monthly payment: <b>{money(results.payment)}</b>
+                        Monthly payment: <b>{money(apiPayment)}</b>
                     </p>
                     <p>
-                        Normal monthly surplus: <b>{money(results.normal)}</b>
-                    </p>
+                        
+                    </p>Normal monthly surplus: <b>{money(apiCashFlow)}</b>
                     <p>
                         Stress-test surplus: <b>{money(results.stressed)}</b>
                     </p>
@@ -221,8 +292,8 @@ export default function DecisionPassport({
                     <h3 className="text-xl font-bold">Offer findings</h3>
                 </div>
 
-                {findings.length > 0 ? (
-                    findings.map((finding, index) => (
+                {passportFindings.length > 0 ? (
+    passportFindings.map((finding, index) => (
                         <article
                             key={`${finding.title}-${index}`}
                             className="rounded-xl border border-slate-700 bg-night p-4"
@@ -273,7 +344,7 @@ export default function DecisionPassport({
                     <div className="rounded-xl border border-slate-700 p-4">
                         <p className="hint">Break-even monthly income</p>
                         <p className="mt-2 text-xl font-bold">
-                            {money(results.breakEvenIncome)}
+                            {money(apiBreakEvenIncome)}
                         </p>
                     </div>
 
